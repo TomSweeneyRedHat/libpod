@@ -96,6 +96,15 @@ cp "$CONMON_BINARY" "$TESTDIR/conmon"
 
 PATH=$PATH:$TESTDIR
 
+###
+# Buildah related variables
+###
+BUILDAH_BINARY=${BUILDAH_BINARY:-$(dirname ${BASH_SOURCE})/../buildah}
+BUILDAH_IMGTYPE_BINARY=${BUILDAH_IMGTYPE_BINARY:-$(dirname ${BASH_SOURCE})/../imgtype}
+BUILDAH_TESTSDIR=${BUILDAH_TESTSDIR:-$(dirname ${BASH_SOURCE})}
+BUILDAH_STORAGE_DRIVER=${BUILDAH_STORAGE_DRIVER:-vfs}
+#BUILDAH_PATH=$(dirname ${BASH_SOURCE})/..:${BUILDAH_PATH}
+
 # Make sure we have a copy of the redis:alpine image.
 if ! [ -d "$ARTIFACTS_PATH"/redis-image ]; then
     mkdir -p "$ARTIFACTS_PATH"/redis-image
@@ -330,4 +339,50 @@ function cleanup_network_conf() {
 
 function temp_sandbox_conf() {
 	sed -e s/\"namespace\":.*/\"namespace\":\ \"$1\",/g "$TESTDATA"/sandbox_config.json > $TESTDIR/sandbox_config_$1.json
+}
+
+###
+# Buildah Functions
+###
+function setup() {
+	suffix=$(dd if=/dev/urandom bs=12 count=1 status=none | base64 | tr +/ABCDEFGHIJKLMNOPQRSTUVWXYZ _.abcdefghijklmnopqrstuvwxyz)
+	TESTDIR=${BATS_TMPDIR}/tmp.${suffix}
+	rm -fr ${TESTDIR}
+	mkdir -p ${TESTDIR}/{root,runroot}
+}
+
+function starthttpd() {
+	pushd ${2:-${TESTDIR}} > /dev/null
+	cp ${BUILDAH_TESTSDIR}/serve.go .
+	go build serve.go
+	HTTP_SERVER_PORT=$((RANDOM+32768))
+	./serve ${HTTP_SERVER_PORT} ${1:-${BATS_TMPDIR}} &
+	HTTP_SERVER_PID=$!
+	popd > /dev/null
+}
+
+function stophttpd() {
+	if test -n "$HTTP_SERVER_PID" ; then
+		kill -HUP ${HTTP_SERVER_PID}
+		unset HTTP_SERVER_PID
+		unset HTTP_SERVER_PORT
+	fi
+	true
+}
+
+function teardown() {
+	stophttpd
+	rm -fr ${TESTDIR}
+}
+
+function createrandom() {
+	dd if=/dev/urandom bs=1 count=${2:-256} of=${1:-${BATS_TMPDIR}/randomfile} status=none
+}
+
+function buildah() {
+	${BUILDAH_BINARY} --debug --root ${TESTDIR}/root --runroot ${TESTDIR}/runroot --storage-driver ${BUILDAH_STORAGE_DRIVER} "$@"
+}
+
+function imgtype() {
+        ${BUILDAH_IMGTYPE_BINARY} -root ${TESTDIR}/root -runroot ${TESTDIR}/runroot -storage-driver ${BUILDAH_STORAGE_DRIVER} "$@"
 }

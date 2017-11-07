@@ -1,0 +1,107 @@
+% kpod(1) kpod-build - Simple tool to build a container image
+% Tom Sweeney
+# kpod-build "7" "November 2017" "kpod"
+
+## NAME
+kpod-build - Build a container image using instructions from Dockerfiles.
+
+## SYNOPSIS
+**buildah** **bud | build-using-dockerfile** [*options* [...]] [**context**]
+
+## DESCRIPTION
+**kpod build** Builds an image using instructions from one or more Dockerfiles and a specified
+build context directory.  The build context directory can be specified as the
+**http** or **https** URL of an archive which will be retrieved and extracted
+to a temporary location.
+
+**kpod [GLOBAL OPTIONS]**
+
+**kpod load [GLOBAL OPTIONS]**
+
+**kpod load [OPTIONS] NAME[:TAG|@DIGEST]**
+
+## OPTIONS
+
+**--build-arg** *arg=value*
+
+Specifies a build argument and its value, which will be interpolated in
+instructions read from the Dockerfiles in the same way that environment
+variables are, but which will not be added to environment variable list in the
+resulting image's configuration.
+
+**-f, --file** *Dockerfile*
+
+Specifies a Dockerfile which contains instructions for building the image,
+either a local file or an **http** or **https** URL.  If more than one
+Dockerfile is specified, *FROM* instructions will only be accepted from the
+first specified file.
+
+If a build context is not specified, and at least one Dockerfile is a
+local file, the directory in which it resides will be used as the build
+context.
+
+**--format**
+
+Control the format for the built image's manifest and configuration data.
+Recognized formats include *oci* (OCI image-spec v1.0, the default) and
+*docker* (version 2, using schema format 2 for the manifest).
+
+**--pull**
+
+Pull the image if it is not present.  If this flag is disabled (with
+*--pull=false*) and the image is not present, the image will not be pulled.
+Defaults to *true*.
+
+**--pull-always**
+
+Pull the image even if a version of the image is already present.
+
+**--quiet**
+
+Suppress output messages which indicate which instruction is being processed,
+and of progress when pulling images from a registry, and when writing the
+output image.
+
+**--runtime** *path*
+
+The *path* to an alternate OCI-compatible runtime, which will be used to run
+commands specified by the **RUN** instruction.
+
+**--runtime-flag** *flag*
+
+Adds global flags for the container rutime.
+
+**--signature-policy** *signaturepolicy*
+
+Pathname of a signature policy file to use.  It is not recommended that this
+option be used, as the default behavior of using the system-wide default policy
+(frequently */etc/containers/policy.json*) is most often preferred.
+
+**-t, --tag** *imageName*
+
+Specifies the name which will be assigned to the resulting image if the build
+process completes successfully.
+
+**--tls-verify** *bool-value*
+
+Require HTTPS and verify certificates when talking to container registries (defaults to true)
+
+## EXAMPLES
+
+kpod build .
+
+kpod build -f Dockerfile.simple .
+
+kpod build -f Dockerfile.simple -f Dockerfile.notsosimple
+
+kpod build -t imageName .
+
+kpod build --tls-verify=true -t imageName -f Dockerfile.simple
+
+kpod build --tls-verify=false -t imageName .
+
+## SEE ALSO
+kpod(1), crio(8), crio.conf(5)
+
+## HISTORY
+November 2017, Originally compiled by Tom Sweeney <tsweeney@redhat.com>
