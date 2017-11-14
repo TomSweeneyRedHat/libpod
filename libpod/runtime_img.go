@@ -613,7 +613,17 @@ func (r *Runtime) PushImage(source string, destination string, options CopyOptio
 	// Get the destination Image Reference
 	dest, err := alltransports.ParseImageName(destination)
 	if err != nil {
-		return errors.Wrapf(err, "error getting destination imageReference for %q", destination)
+		// add the docker:// transport to see if they neglected it.
+		if strings.Contains(destination, "://") {
+			return errors.Wrapf(err, "error getting destination imageReference for %q", destination)
+		}
+
+		destination2 := "docker://" + destination
+		dest2, err2 := alltransports.ParseImageName(destination2)
+		if err2 != nil {
+			return errors.Wrapf(err, "error getting destination imageReference for %q", destination)
+		}
+		dest = dest2
 	}
 
 	signaturePolicyPath := r.config.SignaturePolicyPath
