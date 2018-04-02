@@ -23,6 +23,7 @@ import (
 	"github.com/ulule/deepcopier"
 )
 
+
 // RuntimeStateStore is a constant indicating which state store implementation
 // should be used by libpod
 type RuntimeStateStore int

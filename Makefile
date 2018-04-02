@@ -122,6 +122,9 @@ ifdef HAS_PYTHON3
 	$(MAKE) -C contrib/python/pypodman python-pypodman
 endif
 
+restapi: .gopathok $(shell hack/find-godeps.sh $(GOPKGDIR) restapi $(PROJECT))
+	$(GO) build -i $(LDFLAGS_RESTAPI) -tags "$(BUILDTAGS)" -o bin/$@ $(PROJECT)/restapi
+
 clean:
 	rm -rf \
 		.gopathok \
@@ -144,6 +147,12 @@ ifdef HAS_PYTHON3
 endif
 	find . -name \*~ -delete
 	find . -name \#\* -delete
+	rm -f bin/podman
+	rm -f bin/restapi
+	rm -f test/bin2img/bin2img
+	rm -f test/copyimg/copyimg
+	rm -f test/checkseccomp/checkseccomp
+	rm -fr build/
 
 libpodimage:
 	docker build -t ${LIBPOD_IMAGE} .
@@ -185,7 +194,7 @@ clientintegration:
 vagrant-check:
 	BOX=$(BOX) sh ./vagrant.sh
 
-binaries: varlink_generate easyjson_generate podman python
+binaries: varlink_generate podman python-podman restapi
 
 test-binaries: test/bin2img/bin2img test/copyimg/copyimg test/checkseccomp/checkseccomp
 
@@ -214,6 +223,7 @@ install: .gopathok install.bin install.man install.cni install.systemd install.p
 
 install.bin:
 	install ${SELINUXOPT} -D -m 755 bin/podman $(BINDIR)/podman
+	install ${SELINUXOPT} -D -m 755 bin/restapi $(BINDIR)/restapi
 
 install.man: docs
 	install ${SELINUXOPT} -d -m 755 $(MANDIR)/man1
