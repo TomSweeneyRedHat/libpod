@@ -55,20 +55,21 @@ type BudResults struct {
 	File                []string
 	Format              string
 	Iidfile             string
-	NoCache             bool
 	Label               []string
 	Logfile             string
 	Loglevel            int
+	NoCache             bool
 	Platform            string
 	Pull                bool
 	PullAlways          bool
 	Quiet               bool
 	Rm                  bool
 	Runtime             string
-	RuntimeOpts         []string
+	RuntimeFlags        []string
 	SignaturePolicy     string
 	Squash              bool
 	Tag                 []string
+	Target              string
 	TlsVerify           bool
 }
 
@@ -153,10 +154,11 @@ func GetBudFlags(flags *BudResults) pflag.FlagSet {
 	fs.BoolVarP(&flags.Quiet, "quiet", "q", false, "refrain from announcing build instructions and image read/write progress")
 	fs.BoolVar(&flags.Rm, "rm", true, "Remove intermediate containers after a successful build (default true)")
 	fs.StringVar(&flags.Runtime, "runtime", util.Runtime(), "`path` to an alternate runtime. Use BUILDAH_RUNTIME environment variable to override.")
-	fs.StringSliceVar(&flags.RuntimeOpts, "runtime-flag", []string{}, "add global flags for the container runtime")
+	fs.StringSliceVar(&flags.RuntimeFlags, "runtime-flag", []string{}, "add global flags for the container runtime")
 	fs.StringVar(&flags.SignaturePolicy, "signature-policy", "", "`pathname` of signature policy file (not usually used)")
 	fs.BoolVar(&flags.Squash, "squash", false, "Squash newly built layers into a single new layer. The build process does not currently support caching so this is a NOOP.")
 	fs.StringSliceVarP(&flags.Tag, "tag", "t", []string{}, "tagged `name` to apply to the built image")
+	fs.StringVar(&flags.Target, "target", "", "set the target build stage to build")
 	fs.BoolVar(&flags.TlsVerify, "tls-verify", true, "require HTTPS and verify certificates when accessing the registry")
 	return fs
 }
